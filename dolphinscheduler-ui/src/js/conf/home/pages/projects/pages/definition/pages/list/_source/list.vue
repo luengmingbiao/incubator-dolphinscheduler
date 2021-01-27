@@ -47,7 +47,11 @@
             <span>{{scope.row.updateTime | formatDate}}</span>
           </template>
         </el-table-column>
-        <el-table-column prop="description" :label="$t('Description')"></el-table-column>
+        <el-table-column :label="$t('Description')">
+          <template slot-scope="scope">
+            <span>{{scope.row.description | filterNull}}</span>
+          </template>
+        </el-table-column>
         <el-table-column prop="modifyBy" :label="$t('Modify User')"></el-table-column>
         <el-table-column :label="$t('Timing state')">
           <template slot-scope="scope">
@@ -80,7 +84,6 @@
               <el-button type="primary" size="mini" icon="el-icon-date" :disabled="scope.row.releaseState !== 'ONLINE'" @click="_timingManage(scope.row)" circle></el-button>
             </el-tooltip>
             <el-tooltip :content="$t('delete')" placement="top" :enterable="false">
-              <el-button type="danger" size="mini" icon="el-icon-delete" circle></el-button>
               <el-popconfirm
                 :confirmButtonText="$t('Confirm')"
                 :cancelButtonText="$t('Cancel')"
@@ -120,26 +123,26 @@
     <el-button type="primary" size="mini" :disabled="!strSelectIds" style="position: absolute; bottom: -48px; left: 225px;" @click="_batchMove(item)" >{{$t('Batch move')}}</el-button>
     <el-drawer
       :visible.sync="drawer"
-      size="35%"
+      size=""
       :with-header="false">
-      <m-versions :versionData = versionData @mVersionSwitchProcessDefinitionVersion="mVersionSwitchProcessDefinitionVersion" @mVersionGetProcessDefinitionVersionsPage="mVersionGetProcessDefinitionVersionsPage" @mVersionDeleteProcessDefinitionVersion="mVersionDeleteProcessDefinitionVersion"></m-versions>
+      <m-versions :versionData = versionData @mVersionSwitchProcessDefinitionVersion="mVersionSwitchProcessDefinitionVersion" @mVersionGetProcessDefinitionVersionsPage="mVersionGetProcessDefinitionVersionsPage" @mVersionDeleteProcessDefinitionVersion="mVersionDeleteProcessDefinitionVersion" @closeVersion="closeVersion"></m-versions>
     </el-drawer>
     <el-dialog
       :title="$t('Please set the parameters before starting')"
       :visible.sync="startDialog"
-      width="65%">
+      width="auto">
       <m-start :startData= "startData" @onUpdateStart="onUpdateStart" @closeStart="closeStart"></m-start>
     </el-dialog>
     <el-dialog
       :title="$t('Set parameters before timing')"
       :visible.sync="timingDialog"
-      width="65%">
+      width="auto">
       <m-timing :timingData="timingData" @onUpdateTiming="onUpdateTiming" @closeTiming="closeTiming"></m-timing>
     </el-dialog>
     <el-dialog
-      title="提示"
+      :title="$t('Info')"
       :visible.sync="relatedItemsDialog"
-      width="30%">
+      width="auto">
       <m-related-items :tmp="tmp" @onBatchCopy="onBatchCopy" @onBatchMove="onBatchMove" @closeRelatedItems="closeRelatedItems"></m-related-items>
     </el-dialog>
   </div>
@@ -173,8 +176,6 @@
         timingDialog: false,
         timingData: {
           item: {},
-          receiversD: [],
-          receiversCcD: [],
           type: ''
         },
         relatedItemsDialog: false,
@@ -187,7 +188,7 @@
       pageSize: Number
     },
     methods: {
-      ...mapActions('dag', ['editProcessState', 'getStartCheck', 'getReceiver', 'deleteDefinition', 'batchDeleteDefinition', 'exportDefinition', 'getProcessDefinitionVersionsPage', 'copyProcess', 'switchProcessDefinitionVersion', 'deleteProcessDefinitionVersion', 'moveProcess']),
+      ...mapActions('dag', ['editProcessState', 'getStartCheck', 'deleteDefinition', 'batchDeleteDefinition', 'exportDefinition', 'getProcessDefinitionVersionsPage', 'copyProcess', 'switchProcessDefinitionVersion', 'deleteProcessDefinitionVersion', 'moveProcess']),
       ...mapActions('security', ['getWorkerGroupsAll']),
 
       selectable (row, index) {
@@ -223,29 +224,12 @@
         this.startDialog = false
       },
       /**
-       * get emial
-       */
-      _getReceiver (id) {
-        return new Promise((resolve, reject) => {
-          this.getReceiver({ processDefinitionId: id }).then(res => {
-            resolve({
-              receivers: res.receivers && res.receivers.split(',') || [],
-              receiversCc: res.receiversCc && res.receiversCc.split(',') || []
-            })
-          })
-        })
-      },
-      /**
        * timing
        */
       _timing (item) {
-        this._getReceiver(item.id).then(res => {
-          this.timingData.item = item
-          this.timingData.receiversD = res.receivers
-          this.timingData.receiversCcD = res.receiversCc
-          this.timingData.type = 'timing'
-          this.timingDialog = true
-        })
+        this.timingData.item = item
+        this.timingData.type = 'timing'
+        this.timingDialog = true
       },
       onUpdateTiming () {
         this._onUpdate()
@@ -291,7 +275,7 @@
       _downline (item) {
         this._upProcessState({
           processId: item.id,
-          releaseState: 0
+          releaseState: 'OFFLINE'
         })
       },
       /**
@@ -300,7 +284,7 @@
       _poponline (item) {
         this._upProcessState({
           processId: item.id,
-          releaseState: 1
+          releaseState: 'ONLINE'
         })
       },
       /**
@@ -428,6 +412,10 @@
         }).catch(e => {
           this.$message.error(e.msg || '')
         })
+      },
+
+      closeVersion () {
+        this.drawer = false
       },
 
       _batchExport () {

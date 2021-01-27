@@ -21,8 +21,10 @@
         <template slot="button-group">
           <el-button size="mini" @click="_create('')">{{$t('Create token')}}</el-button>
           <el-dialog
+            :title="item ? $t('Edit token') : $t('Create token')"
+            v-if="createTokenDialog"
             :visible.sync="createTokenDialog"
-            width="50%">
+            width="auto">
             <m-create-token :item="item" @onUpdate="onUpdate" @close="close"></m-create-token>
           </el-dialog>
         </template>

@@ -34,30 +34,30 @@
     <div class="dag-contect">
       <div class="dag-toolbar">
         <div class="assist-btn">
-          <el-button
-            style="vertical-align: middle;"
-            data-toggle="tooltip"
-            :title="$t('View variables')"
-            data-container="body"
-            type="primary"
-            size="mini"
-            :disabled="$route.name !== 'projects-instance-details'"
-            @click="_toggleView"
-            icon="el-icon-c-scale-to-original">
-          </el-button>
-          <span>
+          <el-tooltip :content="$t('View variables')" placement="top" :enterable="false">
+           <span>
             <el-button
               style="vertical-align: middle;"
-              data-toggle="tooltip"
-              :title="$t('Startup parameter')"
-              data-container="body"
               type="primary"
               size="mini"
               :disabled="$route.name !== 'projects-instance-details'"
-              @click="_toggleParam"
-              icon="el-icon-arrow-right">
+              @click="_toggleView"
+              icon="el-icon-c-scale-to-original">
             </el-button>
-          </span>
+           </span>
+          </el-tooltip>
+          <el-tooltip :content="$t('Startup parameter')" placement="top" :enterable="false">
+            <span>
+              <el-button
+                style="vertical-align: middle;"
+                type="primary"
+                size="mini"
+                :disabled="$route.name !== 'projects-instance-details'"
+                @click="_toggleParam"
+                icon="el-icon-arrow-right">
+              </el-button>
+            </span>
+          </el-tooltip>
           <span class="name">{{name}}</span>
           &nbsp;
           <span v-if="name"  class="copy-name" @click="_copyName" :data-clipboard-text="name"><em class="el-icon-copy-document" data-container="body"  data-toggle="tooltip" :title="$t('Copy name')" ></em></span>
@@ -70,32 +70,36 @@
                :id="item.code"
                :key="$index"
                @click="_ckOperation(item,$event)">
-              <el-button type="text" class="operBtn" data-container="body" :icon="item.icon" v-tooltip.light="item.desc"></el-button>
+              <el-tooltip :content="item.desc" placement="top" :enterable="false">
+                <span><el-button type="text" class="operBtn" :icon="item.icon"></el-button></span>
+              </el-tooltip>
             </a>
           </div>
-          <el-button
-            type="primary"
-            v-tooltip.light="$t('Format DAG')"
-            icon="el-icon-caret-right"
-            size="mini"
-            data-container="body"
-            v-if="(type === 'instance' || 'definition') && urlParam.id !=undefined"
-            style="vertical-align: middle;"
-            @click="dagAutomaticLayout">
-          </el-button>
-          <span>
-            <el-button
-              v-tooltip.light="$t('Refresh DAG status')"
-              data-container="body"
-              style="vertical-align: middle;"
-              icon="el-icon-refresh"
-              type="primary"
-              :loading="isRefresh"
-              v-if="type === 'instance'"
-              @click="!isRefresh && _refresh()"
-              size="mini" >
-            </el-button>
-          </span>
+          <el-tooltip :content="$t('Format DAG')" placement="top" :enterable="false">
+            <span>
+              <el-button
+                type="primary"
+                icon="el-icon-caret-right"
+                size="mini"
+                v-if="(type === 'instance' || 'definition') && urlParam.id !=undefined"
+                style="vertical-align: middle;"
+                @click="dagAutomaticLayout">
+              </el-button>
+            </span>
+          </el-tooltip>
+          <el-tooltip :content="$t('Refresh DAG status')" placement="top" :enterable="false">
+            <span>
+              <el-button
+                style="vertical-align: middle;"
+                icon="el-icon-refresh"
+                type="primary"
+                :loading="isRefresh"
+                v-if="type === 'instance'"
+                @click="!isRefresh && _refresh()"
+                size="mini" >
+              </el-button>
+            </span>
+          </el-tooltip>
           <el-button
                   v-if="isRtTasks"
                   style="vertical-align: middle;"
@@ -108,10 +112,8 @@
           <span>
             <el-button
               type="primary"
-              v-tooltip.light="$t('Close')"
               icon="el-icon-switch-button"
               size="mini"
-              data-container="body"
               v-if="(type === 'instance' || 'definition') "
               style="vertical-align: middle;"
               @click="_closeDAG">
@@ -148,26 +150,26 @@
       </div>
       <el-drawer
         :visible.sync="drawer"
-        size="35%"
+        size=""
         :with-header="false">
-        <m-versions :versionData = versionData @mVersionSwitchProcessDefinitionVersion="mVersionSwitchProcessDefinitionVersion" @mVersionGetProcessDefinitionVersionsPage="mVersionGetProcessDefinitionVersionsPage" @mVersionDeleteProcessDefinitionVersion="mVersionDeleteProcessDefinitionVersion"></m-versions>
+        <m-versions :versionData = versionData @mVersionSwitchProcessDefinitionVersion="mVersionSwitchProcessDefinitionVersion" @mVersionGetProcessDefinitionVersionsPage="mVersionGetProcessDefinitionVersionsPage" @mVersionDeleteProcessDefinitionVersion="mVersionDeleteProcessDefinitionVersion" @closeVersion="closeVersion"></m-versions>
       </el-drawer>
       <el-drawer
         :visible.sync="nodeDrawer"
-        size="50%"
+        size=""
         :with-header="false">
         <m-form-model v-if="nodeDrawer" :nodeData=nodeData @seeHistory="seeHistory" @addTaskInfo="addTaskInfo" @cacheTaskInfo="cacheTaskInfo" @close="close" @onSubProcess="onSubProcess"></m-form-model>
       </el-drawer>
       <el-drawer
         :visible.sync="lineDrawer"
-        size="50%"
+        size=""
         :wrapperClosable="false"
         :with-header="false">
         <m-form-line-model :lineData = lineData @addLineInfo="addLineInfo" @cancel="cancel"></m-form-line-model>
       </el-drawer>
       <el-drawer
         :visible.sync="udpDrawer"
-        size="50%"
+        size=""
         :wrapperClosable="false"
         :with-header="false">
         <m-udp></m-udp>
@@ -175,16 +177,15 @@
       <el-dialog
         :title="$t('Set the DAG diagram name')"
         :visible.sync="dialogVisible"
-        width="45%">
+        width="auto">
         <m-udp @onUdp="onUdpDialog" @close="closeDialog"></m-udp>
       </el-dialog>
-
       <el-dialog
-      :title="$t('Please set the parameters before starting')"
-      :visible.sync="startDialog"
-      width="65%">
-      <m-start :startData= "startData" :startNodeList="startNodeList" :sourceType="sourceType" @onUpdateStart="onUpdateStart" @closeStart="closeStart"></m-start>
-    </el-dialog>
+        :title="$t('Please set the parameters before starting')"
+        :visible.sync="startDialog"
+        width="auto">
+        <m-start :startData= "startData" :startNodeList="startNodeList" :sourceType="sourceType" @onUpdateStart="onUpdateStart" @closeStart="closeStart"></m-start>
+      </el-dialog>
     </div>
   </div>
 </template>
@@ -754,6 +755,29 @@
       },
 
       /**
+       * delete one version of process definition
+       *
+       * @param version the version need to delete
+       * @param processDefinitionId the process definition id user want to delete
+       * @param fromThis fromThis
+       */
+      mVersionDeleteProcessDefinitionVersion ({ version, processDefinitionId, fromThis }) {
+        this.deleteProcessDefinitionVersion({
+          version: version,
+          processDefinitionId: processDefinitionId
+        }).then(res => {
+          this.$message.success(res.msg || '')
+          this.mVersionGetProcessDefinitionVersionsPage({
+            pageNo: 1,
+            pageSize: 10,
+            processDefinitionId: processDefinitionId,
+            fromThis: fromThis
+          })
+        }).catch(e => {
+          this.$message.error(e.msg || '')
+        })
+      },
+      /**
        * query the process definition pagination version
        */
       _version (item) {
@@ -777,6 +801,10 @@
         }).catch(e => {
           this.$message.error(e.msg || '')
         })
+      },
+
+      closeVersion () {
+        this.drawer = false
       }
     },
     watch: {
@@ -848,6 +876,6 @@
 <style lang="scss" rel="stylesheet/scss">
   @import "./dag";
   .operBtn {
-    padding: 8px 20px;
+    padding: 8px 6px;
   }
 </style>
